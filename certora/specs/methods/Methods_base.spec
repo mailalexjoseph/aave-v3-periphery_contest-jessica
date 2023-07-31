@@ -1,6 +1,7 @@
 import "./ERC20_methods.spec";
 
 using DummyERC20_AToken as AToken;
+using DummyERC20_rewardToken as _DummyERC20_rewardToken;
 
 /////////////////// Methods ////////////////////////
 
@@ -24,6 +25,10 @@ using DummyERC20_AToken as AToken;
         //envfree functions
         function getUserAccruedRewards(address, address ) external returns(uint256) envfree; 
         function getClaimer(address) external returns (address) envfree;
+
+        // harness functions
+        function claimAllRewardsInternal(address[] assets, address claimer, address user, address to) external returns (address[], uint256[]);
+        function getRewardAmount(address asset, address reward, address user) external returns (uint256);
     }
 
 ///////////////// DEFINITIONS //////////////////////
