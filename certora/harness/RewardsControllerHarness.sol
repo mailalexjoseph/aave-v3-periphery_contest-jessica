@@ -2,16 +2,27 @@
 pragma solidity ^0.8.10;
 
 import {RewardsController} from '../../contracts/rewards/RewardsController.sol';
+import {ITransferStrategyBase} from '../../contracts/rewards/interfaces/ITransferStrategyBase.sol';
+import {IEACAggregatorProxy} from '../../contracts/misc/interfaces/IEACAggregatorProxy.sol';
 
 contract RewardsControllerHarness is RewardsController {
     
     constructor(address emissionManager) RewardsController(emissionManager) {}
 
-    // returns an asset's reward index
+    // Asset Data
+
     function getAssetRewardIndex(address asset, address reward) external view returns (uint256) {
         return _assets[asset].rewards[reward].index;
     }
 
+    function getAvailableRewardsCount(address asset) external view returns (uint256) {
+        return _assets[asset].availableRewardsCount;
+    }
+
+    function getAvailableRewards(address asset, uint128 r) external view returns (address) {
+        return _assets[asset].availableRewards[r];
+    }
+ 
     // User's data
 
     function getUserIndex(address asset, address reward, address user) external view returns (uint256) {
@@ -61,6 +72,22 @@ contract RewardsControllerHarness is RewardsController {
         return _claimAllRewards(assets,claimer,user,to);
     }
 
+    function installTransferStrategyInternal(address reward,  address transferStrategy) external {
+        _installTransferStrategy(reward, ITransferStrategyBase(transferStrategy));
+    }
+
+    function setRewardOracleInternal(address reward,  address rewardOracle) external {
+        _setRewardOracle(reward, IEACAggregatorProxy(rewardOracle));
+    }
+
+    function isContract(address account) external view returns (bool) {
+        return _isContract(account);
+    }
+
+    function transferRewardsInternal(address to, address reward, uint256 amount) external {
+        _transferRewards(to, reward,amount);
+    }
+
     // Storage variables
 
     function getClaimerHarness(address user) external view returns(address) {
@@ -86,4 +113,23 @@ contract RewardsControllerHarness is RewardsController {
     function getRewardsListHarness() external view returns (address[] memory) {
         return _rewardsList;
     }
+
+    // Misc
+
+    function getRewardOracleLatestAnswer(address rewardOracle) external view returns (int256) {
+        return IEACAggregatorProxy(rewardOracle).latestAnswer();
+    }
+
+   function isContractHarness(address account) external view returns (bool) {
+    // This method relies on extcodesize, which returns 0 for contracts in
+    // construction, since the code is only stored at the end of the
+    // constructor execution.
+
+    uint256 size;
+    // solhint-disable-next-line no-inline-assembly
+    assembly {
+      size := extcodesize(account)
+    }
+    return size > 0;
+   }
 }

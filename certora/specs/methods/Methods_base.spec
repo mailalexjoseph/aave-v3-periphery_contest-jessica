@@ -2,6 +2,7 @@ import "./ERC20_methods.spec";
 
 using DummyERC20_AToken as AToken;
 using DummyERC20_rewardToken as _DummyERC20_rewardToken;
+using TransferStrategyHarness as _TransferStrategy;
 
 /////////////////// Methods ////////////////////////
 
@@ -20,7 +21,8 @@ using DummyERC20_rewardToken as _DummyERC20_rewardToken;
         function _.performTransfer(address, address, uint256) external => DISPATCHER(true);
 
         // Oracle - assume any value 
-        function _.latestAnswer() external => NONDET;
+        //function _.latestAnswer() external => NONDET;
+        function _.latestAnswer() external => CONSTANT;
 
         //envfree functions
         function getUserAccruedRewards(address, address ) external returns(uint256) envfree; 

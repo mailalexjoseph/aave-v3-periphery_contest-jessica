@@ -712,3 +712,449 @@ rule only_emissionManager_can_setClaimer(){
 
   assert e.msg.sender != emissionManager => lastReverted;
 }
+
+/*
+    @Rule 24
+
+    @title:
+      Integrity of setClaimer
+    @methods:
+      setClaimer
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/04ab056491644cbf9dc64cc2d2a97630/?anonymousKey=e430d49d83b6e97c371166034fcabb79ca0723ce
+    @status:
+      COMPLETE
+*/
+rule integrity_of_setClaimer(){
+  env e;
+  address user;
+  address caller;
+  
+  setClaimer(e, user, caller);
+  address claimer = getClaimerHarness(e, user);
+  assert caller == claimer;
+}
+
+/*
+    @Rule 25
+
+    @title:
+      transferStrategy cannot be zero address
+    @methods:
+      installTransferStrategy
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/bdb94b1fe1cf4113a21160327128c6bf/?anonymousKey=79e10b2f7f2a7653d0fff7bdd7f09aaa85a632ca
+    @status:
+      COMPLETE
+*/
+rule transferStrategy_cannot_be_zero_address(){
+  env e;
+  address reward;
+  address transferStrategy;
+
+  installTransferStrategyInternal@withrevert(e, reward, transferStrategy);
+
+  assert transferStrategy == 0 => lastReverted;
+}
+
+/*
+    @Rule 26
+
+    @title:
+      transferStrategy must be contract
+    @methods:
+      installTransferStrategy
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/2fad431bdaa843109a2e5a40432c2c8b/?anonymousKey=455ac86de6333bb83a683afb2db2127dd9fb1191
+    @status:
+      COMPLETE
+*/
+rule transferStrategy_must_be_contract(){
+  env e;
+  address reward;
+  address transferStrategy;
+
+  bool contract = isContract(e, transferStrategy);
+
+  installTransferStrategyInternal@withrevert(e, reward, transferStrategy);
+
+  assert !contract => lastReverted;
+}
+
+/*
+    @Rule 27
+
+    @title:
+      Integrity of InstallTransferStrategy
+    @methods:
+      installTransferStrategy
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/f7b1d5e69a0942b19b5eaa39a66d4e24/?anonymousKey=fadc87914f79122b5a6d2a6b2bf8f94e1aae828d
+    @status:
+      COMPLETE
+*/
+rule integrity_of_installTransferStrategy(){
+  env e;
+  address reward;
+  address transferStrategy;
+
+  installTransferStrategyInternal(e, reward, transferStrategy);
+
+  address actualTransferStrategy = getTransferStrategyHarness(e, reward);
+
+  assert transferStrategy == actualTransferStrategy;
+}
+
+/*
+    @Rule 28
+
+    @title:
+      Integrity of setRewardOracle
+    @methods:
+      setRewardOracle
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/1c50a8a755554ab1ad22a75f9e833089/?anonymousKey=42dd8f6c838a0f77ed7e24f5837a12bbb4418927
+    @status:
+      COMPLETE
+*/
+rule integrity_of_setRewardOracle(){
+  env e;
+  address reward;
+  address rewardOracle;
+
+  setRewardOracleInternal(e, reward, rewardOracle);
+
+  address actualRewardOracle = getRewardOracleHarness(e, reward);
+
+  assert rewardOracle == actualRewardOracle;
+}
+
+/*
+    @Rule 29
+
+    @title:
+      Oracle must return a price
+    @methods:
+      setRewardOracle
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+      Changed latestAnswer to CONSTANT from NONDET
+    @link:
+      https://prover.certora.com/output/3960/50cef58cf8484e9984bf299244fe52ba/?anonymousKey=4def6fa2da8088b2296862e0da9923dec80e054d
+    @status:
+      COMPLETE
+*/
+rule oracle_must_return_price() {
+  env e;
+  address rewardOracle;
+  address reward;
+
+  int256 latestAnswer = getRewardOracleLatestAnswer(e, rewardOracle);
+  setRewardOracleInternal@withrevert(e, reward, rewardOracle);
+
+  assert latestAnswer <= 0 => lastReverted;
+}
+
+/*
+    @Rule 30
+
+    @title:
+      Integrity of isContract
+    @methods:
+      isContract
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/496024f986704ee0bbc665745021ea02/?anonymousKey=147bc05b7fedcdfeffa0d72dcbaa5066c30902e2
+    @status:
+      COMPLETE
+*/
+rule integrity_of_isContract() {
+  env e;
+  address account;
+
+  bool expectedContract = isContractHarness(e, account);
+  bool actualContract = isContract(e, account);
+
+  assert expectedContract == actualContract;
+}
+
+/*
+    @Rule 31
+
+    @title:
+      "to" reward balance increases after transferRewards
+    @methods:
+      transferRewards
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/c7ca3ec9db4a446a97fbe1b371a1b7c1/?anonymousKey=0f7397cbb435d17bb73cabf3176e6cd250935174
+    @status:
+      COMPLETE
+*/
+rule to_reward_balance_increases_after_transferRewards() {
+  env e;
+  address to;
+  address reward;
+  uint256 amount;
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
+  transferRewardsInternal(e, to, _DummyERC20_rewardToken, amount);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore + amount));
+}
+
+/*
+    @Rule 32
+
+    @title:
+      TransferStrategy reward balance decreases after transferRewards
+    @methods:
+      transferRewards
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/2cd3a45842b9440788877f258a024b9d/?anonymousKey=02b2b4f098701a81c99472ac3b81d520adc753a2
+    @status:
+      COMPLETE
+*/
+rule transfer_strategy_reward_balance_decreases_after_transferRewards() {
+  env e;
+  address to;
+  address reward;
+  uint256 amount;
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+  transferRewardsInternal(e, to, _DummyERC20_rewardToken, amount);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore - amount));
+}
+
+/*
+    @Rule 33
+
+    @title:
+      transferRewards reverts if transfer is not successful
+    @methods:
+      transferRewards
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/efc80be86b9b4231b7d7e7991e37ccfb/?anonymousKey=c73ba3f67b2935de171d03aa98526b9cd23d328a
+    @status:
+      COMPLETE
+*/
+rule transferRewards_reverts_if_transfer_not_successful() {
+  env e;
+  address to;
+  address reward;
+  uint256 amount;
+
+  uint256 toBalanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
+  uint256 transferStrategyBalanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+  transferRewardsInternal@withrevert(e, to, _DummyERC20_rewardToken, amount);
+  bool transferRewardsReverted = lastReverted;
+  uint256 transferStrategyBalanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+  uint256 toBalanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
+
+  assert transferStrategyBalanceBefore < amount => transferRewardsReverted;
+}
+
+/*
+    @Rule 34
+
+    @title:
+      claimAllRewardsInternal increases to reward balance
+    @methods:
+      claimAllRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      
+    @status:
+      COMPLETE
+*/
+rule claimAllRewardsInternal_increases_to_reward_balance() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  address claimer;
+  address user;
+  address to;
+
+  address reward = getRewardsList(e,0);
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 amount = getRewardAmount(e, asset, reward, user);
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
+  claimAllRewardsInternal(e, assets, claimer, user, to);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore + amount));
+}
+
+/*
+    @Rule 35
+
+    @title:
+      claimAllRewardsInternal increases to reward balance
+    @methods:
+      claimAllRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      
+    @status:
+      COMPLETE
+*/
+rule claimAllRewardsInternal_decreases_transferStrategy_reward_balance() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  address claimer;
+  address user;
+  address to;
+
+  address reward = getRewardsList(e,0);
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 amount = getRewardAmount(e, asset, reward, user);
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+  claimAllRewardsInternal(e, assets, claimer, user, to);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore - amount));
+}
+
+/*
+    @Rule 36
+
+    @title:
+      claimAllRewardsInternal increases to reward balance
+    @methods:
+      claimAllRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      
+    @status:
+      COMPLETE
+*/
+rule claimAllRewardsInternal_returns_correct_rewardsList_and_claimedAmounts() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  address claimer;
+  address user;
+  address to;
+  address[] rewardsList;
+  uint256[] claimedAmounts;
+
+  address reward = getRewardsList(e,0);
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 amount = getRewardAmount(e, asset, reward, user);
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+  rewardsList, claimedAmounts = claimAllRewardsInternal(e, assets, claimer, user, to);
+
+  address rewardTokenAddress = _DummyERC20_rewardToken.myAddress(e);
+
+  address[] expectedRewardsList = [rewardTokenAddress];  
+  uint256[] expectedClaimedAmounts = [amount];
+
+  assert rewardsList.length == expectedRewardsList.length;
+  assert rewardsList[0] == expectedRewardsList[0];
+  assert claimedAmounts.length == expectedClaimedAmounts.length;
+  assert claimedAmounts[0] == expectedClaimedAmounts[0];
+}
+
+/*
+    @Rule 37
+
+    @title:
+      claimAllRewardsInternal increases to reward balance
+    @methods:
+      claimAllRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/863356d514414da2aa60029dde5f1c8a/?anonymousKey=82097d7e12bb3575af66b539cfa36fcf2b611dd4
+    @status:
+      COMPLETE
+*/
+rule claimAllRewardsInternal_updates_accrued_amount() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  address claimer;
+  address user;
+  address to;
+
+  address reward = getRewardsList(e,0);
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 amountBefore = getRewardAmount(e, asset, reward, user);
+  claimAllRewardsInternal(e, assets, claimer, user, to);
+  uint256 amountAfter = getRewardAmount(e, asset, reward, user);
+
+  assert amountAfter == 0;
+}
+

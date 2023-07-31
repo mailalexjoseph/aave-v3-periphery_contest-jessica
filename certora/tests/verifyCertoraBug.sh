@@ -4,7 +4,7 @@ BUG_NUM=$1
 RULE=$2
 
 FILE="bug$BUG_NUM.patch"
-P="certora/tests/participants/$FILE"
+P="certora/tests/certora/$FILE"
 
 echo "Applying $FILE"
 git apply $P

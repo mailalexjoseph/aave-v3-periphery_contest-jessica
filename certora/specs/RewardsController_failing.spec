@@ -20,7 +20,8 @@ rule claimAllRewardsInternal_updates_data(){
   env e;
   address reward;
   address user;
-  address[] assets;
+  address asset;
+  address[] assets = [asset];
 
   address claimer;
   address to;
@@ -28,9 +29,16 @@ rule claimAllRewardsInternal_updates_data(){
   address[] rewardsList;
   uint256[] claimedAmounts;
 
+  uint256 availableRewardsCount = getAvailableRewardsCount(e, asset);
+  address availableReward = getAvailableRewards(e, asset, 0);
+
+  require reward == availableReward;
+
   uint256 userBalance = getUserAssetBalancesUserBalance(e, assets, user, 0);
   uint256 totalSupply = getUserAssetBalancesTotalSupply(e, assets, user, 0);
-  address asset = getUserAssetBalancesAsset(e, assets, user, 0);
+  address userAsset = getUserAssetBalancesAsset(e, assets, user, 0);
+
+  require userAsset == asset;
 
   uint256 userIndex = getUserIndex(e, asset, reward, user);
   uint256 assetUnit = getAssetUnit(e, asset);
