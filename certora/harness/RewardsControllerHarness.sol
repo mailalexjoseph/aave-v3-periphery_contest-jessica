@@ -66,4 +66,24 @@ contract RewardsControllerHarness is RewardsController {
     function getClaimerHarness(address user) external view returns(address) {
         return _authorizedClaimers[user];
     }
+
+    function getRevisionHarness() external view returns(uint256) {
+        return REVISION;
+    }
+
+    function getRewardOracleHarness(address reward) external view returns(address) {
+        return address(_rewardOracle[reward]);
+    }
+
+    function getTransferStrategyHarness(address reward) external view returns(address) {
+        return address(_transferStrategy[reward]);
+    }
+
+    function getEmissionManagerHarness() external view returns(address) {
+        return EMISSION_MANAGER;
+    }
+
+    function getRewardsListHarness() external view returns (address[] memory) {
+        return _rewardsList;
+    }
 }
