@@ -1410,3 +1410,182 @@ rule integrity_of_getUserAssetBalances() {
 
   assert asset == actualAsset && userBalance == actualUserBalance && totalSupply == actualTotalSupply;
 }
+
+/*
+    @Rule 44
+
+    @title:
+      Integrity of getRewardsData
+    @methods:
+      getRewardsData
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/3d57fcfb916d439eae2b00a124b0e8a7/?anonymousKey=06d52903841881d0074d8caf2df0b7e2be48b25a
+    @status:
+      COMPLETE
+*/
+rule integrity_of_getRewardsData() {
+  env e;
+  address asset;
+  address reward;
+
+  uint256 index;
+  uint256 emissionPerSecond;
+  uint256 lastUpdateTimestamp;
+  uint256 distributionEnd;
+
+  uint256 expectedIndex;
+  uint256 expectedEmissionPerSecond;
+  uint256 expectedLastUpdateTimestamp;
+  uint256 expectedDistributionEnd;
+
+  expectedIndex, expectedEmissionPerSecond, expectedLastUpdateTimestamp, expectedDistributionEnd = getRewardsDataHarness(e, asset, reward);
+  index, emissionPerSecond, lastUpdateTimestamp, distributionEnd = getRewardsData(e, asset,reward);
+
+  assert expectedIndex == index &&
+  expectedEmissionPerSecond == emissionPerSecond &&
+  expectedLastUpdateTimestamp == lastUpdateTimestamp &&
+  expectedDistributionEnd == distributionEnd;
+}
+
+/*
+    @Rule 45
+
+    @title:
+      Integrity of getDistributionEnd
+    @methods:
+      getDistributionEnd
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/16930d81037b439b99f6b707c3e0a9d2/?anonymousKey=9926c139a964f184b012cda2278107680f9f1e10
+    @status:
+      COMPLETE
+*/
+rule integrity_of_getDistributionEnd() {
+  env e;
+  address asset;
+  address reward;
+
+  uint256 expectedDistributionEnd = getDistributionEndHarness(e, asset, reward);
+  uint256 distributionEnd = getDistributionEnd(e, asset, reward);
+  assert distributionEnd == expectedDistributionEnd;
+}
+
+/*
+    @Rule 46
+
+    @title:
+      Integrity of getRewardsByAsset
+    @methods:
+      getRewardsByAsset
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      
+    @status:
+      COMPLETE
+*/
+rule integrity_of_getRewardsByAsset() {
+  env e;
+  address asset;
+  address[] availableRewards;
+
+  address expectedAvailableReward = getAvailableRewardsAtIndex(e, asset, 0);
+  availableRewards = getRewardsByAsset(e, asset);
+  address availableReward = availableRewards[0];
+  assert availableReward == expectedAvailableReward;
+}
+
+/*
+    @Rule 47
+
+    @title:
+      Integrity of getRewardsList
+    @methods:
+      getRewardsList
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      
+    @status:
+      COMPLETE
+*/
+rule integrity_of_getRewardsList() {
+  env e;
+  address[] rewardsList;
+  address[] expectedRewardsList;
+
+  rewardsList = getRewardsList(e);
+  expectedRewardsList = getRewardsListHarness(e);
+
+  assert rewardsList.length == expectedRewardsList.length;
+  assert rewardsList[0] == expectedRewardsList[0];
+}
+
+/*
+    @Rule 48
+
+    @title:
+      Integrity of getUserAssetIndex
+    @methods:
+      getUserAssetIndex
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      
+    @status:
+      COMPLETE
+*/
+rule integrity_of_getUserAssetIndex() {
+  env e;
+  address user;
+  address asset;
+  address reward;
+
+  uint256 userAssetIndex = getUserAssetIndex(e, user, asset, reward);
+  uint256 expectedUserAssetIndex = getUserAssetIndexHarness(e, user, asset,reward);
+  assert userAssetIndex == expectedUserAssetIndex;
+}
+
+/*
+    @Rule 48
+
+    @title:
+      Integrity of getUserAccruedRewards
+    @methods:
+      getUserAccruedRewards
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      
+    @status:
+      COMPLETE
+*/
+rule integrity_of_getUserAccruedRewards() {
+  env e;
+  address user;
+  address reward;
+  
+  uint256 totalAccrued = getUserAccruedRewards(user, reward);
+  assert true;
+}

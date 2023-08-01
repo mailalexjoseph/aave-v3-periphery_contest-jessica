@@ -165,7 +165,24 @@ contract RewardsControllerHarness is RewardsController {
 
    // Configure assets functions
 
-   function configureAssetsPublic(RewardsDataTypes.RewardsConfigInput[] memory config) public {
-    configureAssets(config);
-   }
+    function getRewardsDataHarness(address asset, address reward) public view returns (uint256,uint256,uint256,uint256) {
+        return (
+        _assets[asset].rewards[reward].index,
+        _assets[asset].rewards[reward].emissionPerSecond,
+        _assets[asset].rewards[reward].lastUpdateTimestamp,
+        _assets[asset].rewards[reward].distributionEnd
+        );
+  }
+
+  function getDistributionEndHarness(address asset, address reward) public view returns (uint256) {
+    return _assets[asset].rewards[reward].distributionEnd;
+  }
+
+  function getAvailableRewardsAtIndex(address asset, uint128 i) public view returns (address) {
+    return _assets[asset].availableRewards[i];
+  }
+
+  function getUserAssetIndexHarness(address user, address asset, address reward) public view returns (uint256) {
+    return _assets[asset].rewards[reward].usersData[user].index;
+  }
 }

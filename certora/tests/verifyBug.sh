@@ -8,6 +8,6 @@ P="certora/tests/participants/$FILE"
 
 echo "Applying $FILE"
 git apply $P
-certoraRun certora/conf/default.conf --send_only --rule $RULE --msg $FILE
+certoraRun certora/conf/default.conf --send_only --rule_sanity --rule $RULE --msg $FILE
 echo "Reverting $FILE"
 git apply -R $P
