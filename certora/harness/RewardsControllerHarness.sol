@@ -4,6 +4,7 @@ pragma solidity ^0.8.10;
 import {RewardsController} from '../../contracts/rewards/RewardsController.sol';
 import {ITransferStrategyBase} from '../../contracts/rewards/interfaces/ITransferStrategyBase.sol';
 import {IEACAggregatorProxy} from '../../contracts/misc/interfaces/IEACAggregatorProxy.sol';
+import {RewardsDataTypes} from '../../contracts/rewards/libraries/RewardsDataTypes.sol';
 
 contract RewardsControllerHarness is RewardsController {
     
@@ -35,11 +36,11 @@ contract RewardsControllerHarness is RewardsController {
 
     // User asset balances data
 
-    function getUserAssetBalancesUserBalance(address[] calldata assets, address user, uint256 j) external view returns (uint256) {
+    function getUserAssetBalancesUserBalance(address[] calldata assets, address user, uint256 j) public view returns (uint256) {
         return _getUserAssetBalances(assets, user)[j].userBalance;
     }
 
-    function getUserAssetBalancesTotalSupply(address[] calldata assets, address user, uint256 j) external view returns (uint256) {
+    function getUserAssetBalancesTotalSupply(address[] calldata assets, address user, uint256 j) public view returns (uint256) {
         return _getUserAssetBalances(assets, user)[j].totalSupply;
     }
 
@@ -61,11 +62,7 @@ contract RewardsControllerHarness is RewardsController {
         uint256 rewardsAccrued = _getRewards(userBalance, newAssetIndex, userIndex, assetUnit);
         return rewardsAccrued;
     }
-
-    function getAssetUnit(address asset) external view returns (uint256) {
-        return 10**_assets[asset].decimals;
-    }
-
+    
     // Internal functions
 
     function claimAllRewardsInternal(address[] calldata assets, address claimer, address user, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
@@ -88,6 +85,30 @@ contract RewardsControllerHarness is RewardsController {
         _transferRewards(to, reward,amount);
     }
 
+    function getAssetUnit(address asset) public view returns (uint256) {
+        return 10**_assets[asset].decimals;
+    }
+
+    function updateRewardData(address[] calldata assets, address reward, address user, uint256 j) public returns (uint256, bool) {
+        address asset = assets[j];
+        RewardsDataTypes.RewardData storage rewardData = _assets[asset].rewards[reward];
+        uint256 assetUnit = getAssetUnit(asset);
+        uint256 totalSupply = getUserAssetBalancesTotalSupply(assets, user, j);
+        (uint256 newAssetIndex, bool rewardDataUpdated) = _updateRewardData(rewardData, totalSupply, assetUnit);
+        return (newAssetIndex, rewardDataUpdated);
+    }
+
+    function updateUserData(address[] calldata assets, address reward, address user, uint256 j) public returns (uint256, bool) {
+        address asset = assets[j];
+        RewardsDataTypes.RewardData storage rewardData = _assets[asset].rewards[reward];
+        uint256 userBalance = getUserAssetBalancesUserBalance(assets, user, j);
+        uint256 totalSupply = getUserAssetBalancesTotalSupply(assets, user, j);
+        uint256 assetUnit = getAssetUnit(asset);
+        (uint256 newAssetIndex, bool rewardDataUpdated) = _updateRewardData(rewardData, totalSupply, assetUnit);
+        (uint256 rewardsAccrued, bool userDataUpdated) = _updateUserData(rewardData,user,userBalance,newAssetIndex,assetUnit);
+        return (rewardsAccrued, userDataUpdated);
+    }
+    
     // Storage variables
 
     function getClaimerHarness(address user) external view returns(address) {

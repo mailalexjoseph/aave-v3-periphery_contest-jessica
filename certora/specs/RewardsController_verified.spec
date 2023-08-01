@@ -1016,7 +1016,7 @@ rule transferRewards_reverts_if_transfer_not_successful() {
       PASSES
     @note:
     @link:
-      
+      https://prover.certora.com/output/3960/eda664fe23714a7d803d4a89fb565b56/?anonymousKey=26519aed5508ddbe61f234c7408fdda4b20ebe4b
     @status:
       COMPLETE
 */
@@ -1028,16 +1028,20 @@ rule claimAllRewardsInternal_increases_to_reward_balance() {
   address user;
   address to;
 
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
   address reward = getRewardsList(e,0);
   require reward == _DummyERC20_rewardToken;
 
   uint256 amount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
 
   uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
   claimAllRewardsInternal(e, assets, claimer, user, to);
   uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
 
-  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore + amount));
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore + amount + rewardsAccrued));
 }
 
 /*
@@ -1053,7 +1057,7 @@ rule claimAllRewardsInternal_increases_to_reward_balance() {
       PASSES
     @note:
     @link:
-      
+      https://prover.certora.com/output/3960/17f05da4b96040068a9f864a9b2e8082/?anonymousKey=062f1a2b8faa649cfc38e959690fb2929f319212
     @status:
       COMPLETE
 */
@@ -1065,16 +1069,20 @@ rule claimAllRewardsInternal_decreases_transferStrategy_reward_balance() {
   address user;
   address to;
 
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
   address reward = getRewardsList(e,0);
   require reward == _DummyERC20_rewardToken;
 
   uint256 amount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
 
   uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
   claimAllRewardsInternal(e, assets, claimer, user, to);
   uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
 
-  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore - amount));
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore - amount - rewardsAccrued));
 }
 
 /*
@@ -1090,7 +1098,7 @@ rule claimAllRewardsInternal_decreases_transferStrategy_reward_balance() {
       PASSES
     @note:
     @link:
-      
+      https://prover.certora.com/output/3960/783251ea2dc54818afdc5c76db41f058/?anonymousKey=9d6c8e7745d51b2d71dad3e394de8645d61e9e97
     @status:
       COMPLETE
 */
@@ -1104,10 +1112,16 @@ rule claimAllRewardsInternal_returns_correct_rewardsList_and_claimedAmounts() {
   address[] rewardsList;
   uint256[] claimedAmounts;
 
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
   address reward = getRewardsList(e,0);
   require reward == _DummyERC20_rewardToken;
 
   uint256 amount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+
+  uint256 totalAmount = assert_uint256(amount + rewardsAccrued);
 
   uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
   rewardsList, claimedAmounts = claimAllRewardsInternal(e, assets, claimer, user, to);
@@ -1115,7 +1129,7 @@ rule claimAllRewardsInternal_returns_correct_rewardsList_and_claimedAmounts() {
   address rewardTokenAddress = _DummyERC20_rewardToken.myAddress(e);
 
   address[] expectedRewardsList = [rewardTokenAddress];  
-  uint256[] expectedClaimedAmounts = [amount];
+  uint256[] expectedClaimedAmounts = [totalAmount];
 
   assert rewardsList.length == expectedRewardsList.length;
   assert rewardsList[0] == expectedRewardsList[0];
@@ -1136,7 +1150,7 @@ rule claimAllRewardsInternal_returns_correct_rewardsList_and_claimedAmounts() {
       PASSES
     @note:
     @link:
-      https://prover.certora.com/output/3960/863356d514414da2aa60029dde5f1c8a/?anonymousKey=82097d7e12bb3575af66b539cfa36fcf2b611dd4
+      https://prover.certora.com/output/3960/c19e531db4914fa694b47ea63cf4c386/?anonymousKey=87a7083af329da0fad4baafd230b7612d1c51758
     @status:
       COMPLETE
 */
@@ -1151,7 +1165,6 @@ rule claimAllRewardsInternal_updates_accrued_amount() {
   address reward = getRewardsList(e,0);
   require reward == _DummyERC20_rewardToken;
 
-  uint256 amountBefore = getRewardAmount(e, asset, reward, user);
   claimAllRewardsInternal(e, assets, claimer, user, to);
   uint256 amountAfter = getRewardAmount(e, asset, reward, user);
 
