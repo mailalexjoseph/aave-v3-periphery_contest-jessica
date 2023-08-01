@@ -1171,3 +1171,242 @@ rule claimAllRewardsInternal_updates_accrued_amount() {
   assert amountAfter == 0;
 }
 
+/*
+    @Rule 38
+
+    @title:
+      claimRewardsInternal returns zero if amount is zero and keeps balances the same
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/a982f2f8d13641ae8405cf450a1427fa/?anonymousKey=ea21d474954ee3089cd1f3b7c075694b8c3b13a4
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_returns_zero_if_amount_zero() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 toRewardBalanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
+  uint256 transferStrategyRewardBalanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+
+  uint256 toRewardBalanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
+  uint256 transferStrategyRewardBalanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy); 
+
+  assert amount == 0 => (totalRewards == 0 && toRewardBalanceAfter == toRewardBalanceBefore && transferStrategyRewardBalanceAfter == transferStrategyRewardBalanceBefore);
+}
+
+/*
+    @Rule 39
+
+    @title:
+      claimRewardsInternal updates accrued amount
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/2adde0113d54415bba47dea8850ff171/?anonymousKey=8bd0ac86bc9c44b2dd7a7c425cb93aa6ae49cef5
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_updates_accrued_amount() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 rewardsAmount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+
+  uint256 expectedTotalRewards = assert_uint256(rewardsAmount + rewardsAccrued);
+
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 rewardsAmountAfter = getRewardAmount(e, asset, reward, user);
+
+  assert expectedTotalRewards <= amount => rewardsAmountAfter == 0;
+  assert expectedTotalRewards > amount => rewardsAmountAfter == assert_uint256(expectedTotalRewards - amount);
+}
+
+/*
+    @Rule 40
+
+    @title:
+      claimRewardsInternal increases to reward balance
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/57b54d81041d498ba9036d1e847aa7ec/?anonymousKey=842447fddfd6932367f429fe4f3f1f59001129b5
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_increases_to_reward_balance() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore + totalRewards));
+}
+
+/*
+    @Rule 41
+
+    @title:
+      claimRewardsInternal decreases Transfer Strategy reward balance
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/7700a468230c4c22b595f3cbe15b4b3b/?anonymousKey=d0a90e80ab5af3814281af7abff27c2ca1a0ebf8
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_decreases_transfer_strategy_reward_balance() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore - totalRewards));
+}
+
+/*
+    @Rule 42
+
+    @title:
+      claimRewardsInternal returns correct totalRewards
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/4cb9720d504442bdb3a628303b71efb3/?anonymousKey=3e940d822ffcd208e0fcba483ab1a20d2f7a5686
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_returns_correct_totalRewards() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 rewardsAmount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+
+  uint256 expectedTotalRewards = assert_uint256(rewardsAmount + rewardsAccrued);
+
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 rewardsAmountAfter = getRewardAmount(e, asset, reward, user);
+
+  assert (expectedTotalRewards <= amount) => totalRewards == expectedTotalRewards;
+  assert (expectedTotalRewards > amount) => totalRewards == amount;
+}
+
+/*
+    @Rule 43
+
+    @title:
+      Integrity of getUserAssetBalances
+    @methods:
+      getUserAssetBalances
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/5d55563b6fb847e4ad6770e837f4ecca/?anonymousKey=97778a9f6536939fedf863a47951c57a4ed8ce85
+    @status:
+      COMPLETE
+*/
+rule integrity_of_getUserAssetBalances() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  address user;
+  uint256 totalSupply;
+  uint256 userBalance;
+
+  address actualAsset = getUserAssetBalancesAsset(e, assets, user, 0);
+  uint256 actualTotalSupply = getUserAssetBalancesTotalSupply(e, assets, user, 0);
+  uint256 actualUserBalance = getUserAssetBalancesUserBalance(e, assets, user, 0);
+
+  userBalance, totalSupply = getUserTotalSupplyAndBalance(e, assets, user, 0);
+
+  assert asset == actualAsset && userBalance == actualUserBalance && totalSupply == actualTotalSupply;
+}

@@ -5,6 +5,7 @@ import {RewardsController} from '../../contracts/rewards/RewardsController.sol';
 import {ITransferStrategyBase} from '../../contracts/rewards/interfaces/ITransferStrategyBase.sol';
 import {IEACAggregatorProxy} from '../../contracts/misc/interfaces/IEACAggregatorProxy.sol';
 import {RewardsDataTypes} from '../../contracts/rewards/libraries/RewardsDataTypes.sol';
+import {IScaledBalanceToken} from '@aave/core-v3/contracts/interfaces/IScaledBalanceToken.sol';
 
 contract RewardsControllerHarness is RewardsController {
     
@@ -62,8 +63,16 @@ contract RewardsControllerHarness is RewardsController {
         uint256 rewardsAccrued = _getRewards(userBalance, newAssetIndex, userIndex, assetUnit);
         return rewardsAccrued;
     }
-    
+
+    function getUserTotalSupplyAndBalance(address[] calldata assets, address user, uint256 i) public returns (uint256, uint256) {
+        return IScaledBalanceToken(assets[i]).getScaledUserBalanceAndSupply(user);
+    }
+
     // Internal functions
+
+    function claimRewardsInternal(address[] calldata assets, uint256 amount, address claimer, address user, address to, address reward) public returns (uint256) {
+        return _claimRewards(assets, amount, claimer, user, to, reward);
+    }
 
     function claimAllRewardsInternal(address[] calldata assets, address claimer, address user, address to) external returns (address[] memory rewardsList, uint256[] memory claimedAmounts) {
         return _claimAllRewards(assets,claimer,user,to);
@@ -152,5 +161,11 @@ contract RewardsControllerHarness is RewardsController {
       size := extcodesize(account)
     }
     return size > 0;
+   }
+
+   // Configure assets functions
+
+   function configureAssetsPublic(RewardsDataTypes.RewardsConfigInput[] memory config) public {
+    configureAssets(config);
    }
 }
