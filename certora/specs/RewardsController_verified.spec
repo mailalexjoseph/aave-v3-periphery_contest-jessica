@@ -2041,3 +2041,37 @@ rule claimRewardsInternal_returns_zero_if_amount_zero_twice() {
 //   assert (expectedTotalRewards <= amount) => totalRewardsTwice == expectedTotalRewards;
 //   assert (expectedTotalRewards > amount) => totalRewardsTwice == amount;
 // }
+
+/*
+    @Rule 49
+
+    @title:
+      isRewardEnabled is only changed in configureAssets
+    @methods:
+      All methods
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      
+    @status:
+      COMPLETE
+*/
+rule isRewardEnabled_is_only_set_to_true_in_configureAssets_2() {
+  env e;
+  method f;
+  calldataarg args;
+
+  address reward;
+
+  bool isRewardEnabledBefore = isRewardEnabled(e, reward);
+
+  f(e, args);
+
+  bool isRewardEnabledAfter = isRewardEnabled(e, reward);
+
+  //assert (f.selector == sig:configureAssets(RewardsDataTypes.RewardsConfigInput[]).selector || f.selector == sig:configureAssetsInternal(RewardsDataTypes.RewardsConfigInput[]).selector) && !isRewardEnabledBefore => isRewardEnabledAfter;
+  assert ((f.selector != sig:configureAssets(RewardsDataTypes.RewardsConfigInput[]).selector && f.selector != sig:configureAssetsInternal(RewardsDataTypes.RewardsConfigInput[]).selector) && !isRewardEnabledBefore) => !isRewardEnabledAfter;
+}
