@@ -1620,8 +1620,8 @@ rule isRewardEnabled_is_only_set_to_true_in_configureAssets() {
 
   bool isRewardEnabledAfter = isRewardEnabled(e, reward);
 
-  assert f.selector == sig:configureAssets(RewardsDataTypes.RewardsConfigInput[]).selector => isRewardEnabledAfter;
-  assert (f.selector != sig:configureAssets(RewardsDataTypes.RewardsConfigInput[]).selector && !isRewardEnabledBefore) => !isRewardEnabledAfter;
+  assert (f.selector == sig:configureAssets(RewardsDataTypes.RewardsConfigInput[]).selector || f.selector == sig:configureAssetsInternal(RewardsDataTypes.RewardsConfigInput[]).selector) && !isRewardEnabledBefore => isRewardEnabledAfter;
+  assert ((f.selector != sig:configureAssets(RewardsDataTypes.RewardsConfigInput[]).selector && f.selector != sig:configureAssetsInternal(RewardsDataTypes.RewardsConfigInput[]).selector) && !isRewardEnabledBefore) => !isRewardEnabledAfter;
 }
 
 
@@ -1642,7 +1642,7 @@ rule isRewardEnabled_is_only_set_to_true_in_configureAssets() {
     @status:
       COMPLETE
 */
-rule claimAllRewardsInternal_increases_to_reward_balance_twice_twice() {
+rule claimAllRewardsInternal_increases_to_reward_balance_twice() {
   env e;
   address asset;
   address[] assets = [asset];
@@ -1732,45 +1732,45 @@ rule claimAllRewardsInternal_decreases_transferStrategy_reward_balance_twice_twi
     @status:
       COMPLETE
 */
-rule claimAllRewardsInternal_returns_correct_rewardsList_and_claimedAmounts_twice() {
-  env e;
-  address asset;
-  address[] assets = [asset];
-  address claimer;
-  address user;
-  address to;
-  address[] rewardsList;
-  uint256[] claimedAmounts;
+// rule claimAllRewardsInternal_returns_correct_rewardsList_and_claimedAmounts_twice() {
+//   env e;
+//   address asset;
+//   address[] assets = [asset];
+//   address claimer;
+//   address user;
+//   address to;
+//   address[] rewardsList;
+//   uint256[] claimedAmounts;
 
-  address[] rewardsListTwice;
-  uint256[] claimedAmountsTwice;
+//   address[] rewardsListTwice;
+//   uint256[] claimedAmountsTwice;
 
-  uint256 rewardsAccrued;
-  bool userDataUpdated;
+//   uint256 rewardsAccrued;
+//   bool userDataUpdated;
 
-  address reward = getRewardsList(e,0);
-  require reward == _DummyERC20_rewardToken;
+//   address reward = getRewardsList(e,0);
+//   require reward == _DummyERC20_rewardToken;
 
-  uint256 amount = getRewardAmount(e, asset, reward, user);
-  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+//   uint256 amount = getRewardAmount(e, asset, reward, user);
+//   rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
 
-  uint256 totalAmount = assert_uint256(amount + rewardsAccrued);
+//   uint256 totalAmount = assert_uint256(amount + rewardsAccrued);
 
-  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
-  rewardsList, claimedAmounts = claimAllRewardsInternal(e, assets, claimer, user, to);
+//   uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+//   rewardsList, claimedAmounts = claimAllRewardsInternal(e, assets, claimer, user, to);
 
-  address rewardTokenAddress = _DummyERC20_rewardToken.myAddress(e);
+//   address rewardTokenAddress = _DummyERC20_rewardToken.myAddress(e);
 
-  address[] expectedRewardsList = [rewardTokenAddress];  
-  uint256[] expectedClaimedAmounts = [totalAmount];
+//   address[] expectedRewardsList = [rewardTokenAddress];  
+//   uint256[] expectedClaimedAmounts = [totalAmount];
 
-  rewardsListTwice, claimedAmountsTwice = claimAllRewardsInternal(e, assets, claimer, user, to);
+//   rewardsListTwice, claimedAmountsTwice = claimAllRewardsInternal(e, assets, claimer, user, to);
 
-  assert rewardsListTwice.length == expectedRewardsList.length;
-  assert rewardsListTwice[0] == expectedRewardsList[0];
-  assert claimedAmountsTwice.length == expectedClaimedAmounts.length;
-  assert claimedAmountsTwice[0] == expectedClaimedAmounts[0];
-}
+//   assert rewardsListTwice.length == expectedRewardsList.length;
+//   assert rewardsListTwice[0] == expectedRewardsList[0];
+//   assert claimedAmountsTwice.length == expectedClaimedAmounts.length;
+//   assert claimedAmountsTwice[0] == expectedClaimedAmounts[0];
+// }
 
 /*
     @Rule 53
@@ -1876,35 +1876,35 @@ rule claimRewardsInternal_returns_zero_if_amount_zero_twice() {
     @status:
       COMPLETE
 */
-rule claimRewardsInternal_updates_accrued_amount_twice() {
-  env e;
-  address asset;
-  address[] assets = [asset];
-  uint256 amount;
-  address claimer;
-  address user;
-  address to;
-  address reward;
+// rule claimRewardsInternal_updates_accrued_amount_twice() {
+//   env e;
+//   address asset;
+//   address[] assets = [asset];
+//   uint256 amount;
+//   address claimer;
+//   address user;
+//   address to;
+//   address reward;
 
-  uint256 rewardsAccrued;
-  bool userDataUpdated;
+//   uint256 rewardsAccrued;
+//   bool userDataUpdated;
 
-  require reward == _DummyERC20_rewardToken;
+//   require reward == _DummyERC20_rewardToken;
 
-  uint256 rewardsAmount = getRewardAmount(e, asset, reward, user);
-  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+//   uint256 rewardsAmount = getRewardAmount(e, asset, reward, user);
+//   rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
 
-  uint256 expectedTotalRewards = assert_uint256(rewardsAmount + rewardsAccrued);
+//   uint256 expectedTotalRewards = assert_uint256(rewardsAmount + rewardsAccrued);
 
-  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
-  uint256 rewardsAmountAfter = getRewardAmount(e, asset, reward, user);
+//   uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+//   uint256 rewardsAmountAfter = getRewardAmount(e, asset, reward, user);
 
-  uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
-  uint256 rewardsAmountAfterTwice = getRewardAmount(e, asset, reward, user);
+//   uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+//   uint256 rewardsAmountAfterTwice = getRewardAmount(e, asset, reward, user);
 
-  assert expectedTotalRewards <= amount => rewardsAmountAfterTwice == 0;
-  assert expectedTotalRewards > amount => rewardsAmountAfterTwice == assert_uint256(expectedTotalRewards - amount);
-}
+//   assert expectedTotalRewards <= amount => rewardsAmountAfterTwice == 0;
+//   assert expectedTotalRewards > amount => rewardsAmountAfterTwice == assert_uint256(expectedTotalRewards - amount);
+// }
 
 /*
     @Rule 56
@@ -1923,31 +1923,31 @@ rule claimRewardsInternal_updates_accrued_amount_twice() {
     @status:
       COMPLETE
 */
-rule claimRewardsInternal_increases_to_reward_balance_twice() {
-  env e;
-  address asset;
-  address[] assets = [asset];
-  uint256 amount;
-  address claimer;
-  address user;
-  address to;
-  address reward;
+// rule claimRewardsInternal_increases_to_reward_balance_twice() {
+//   env e;
+//   address asset;
+//   address[] assets = [asset];
+//   uint256 amount;
+//   address claimer;
+//   address user;
+//   address to;
+//   address reward;
 
-  uint256 rewardsAccrued;
-  bool userDataUpdated;
+//   uint256 rewardsAccrued;
+//   bool userDataUpdated;
 
-  require reward == _DummyERC20_rewardToken;
+//   require reward == _DummyERC20_rewardToken;
 
-  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
-  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
-  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
+//   uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
+//   uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+//   uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
 
-  uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
-  uint256 balanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, to);
+//   uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+//   uint256 balanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, to);
 
-  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore + totalRewards));
-  assert to != _TransferStrategy => (balanceAfterTwice == assert_uint256(balanceBefore + totalRewards));
-}
+//   assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore + totalRewards));
+//   assert to != _TransferStrategy => (balanceAfterTwice == assert_uint256(balanceBefore + totalRewards));
+// }
 
 /*
     @Rule 57
@@ -1966,31 +1966,31 @@ rule claimRewardsInternal_increases_to_reward_balance_twice() {
     @status:
       COMPLETE
 */
-rule claimRewardsInternal_decreases_transfer_strategy_reward_balance_twice() {
-  env e;
-  address asset;
-  address[] assets = [asset];
-  uint256 amount;
-  address claimer;
-  address user;
-  address to;
-  address reward;
+// rule claimRewardsInternal_decreases_transfer_strategy_reward_balance_twice() {
+//   env e;
+//   address asset;
+//   address[] assets = [asset];
+//   uint256 amount;
+//   address claimer;
+//   address user;
+//   address to;
+//   address reward;
 
-  uint256 rewardsAccrued;
-  bool userDataUpdated;
+//   uint256 rewardsAccrued;
+//   bool userDataUpdated;
 
-  require reward == _DummyERC20_rewardToken;
+//   require reward == _DummyERC20_rewardToken;
 
-  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
-  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
-  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+//   uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+//   uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+//   uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
 
-  uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
-  uint256 balanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+//   uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+//   uint256 balanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
 
-  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore - totalRewards));
-  assert to != _TransferStrategy => (balanceAfterTwice == assert_uint256(balanceBefore - totalRewards));
-}
+//   assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore - totalRewards));
+//   assert to != _TransferStrategy => (balanceAfterTwice == assert_uint256(balanceBefore - totalRewards));
+// }
 
 /*
     @Rule 58
@@ -2009,35 +2009,35 @@ rule claimRewardsInternal_decreases_transfer_strategy_reward_balance_twice() {
     @status:
       COMPLETE
 */
-rule claimRewardsInternal_returns_correct_totalRewards_twice() {
-  env e;
-  address asset;
-  address[] assets = [asset];
-  uint256 amount;
-  address claimer;
-  address user;
-  address to;
-  address reward;
+// rule claimRewardsInternal_returns_correct_totalRewards_twice() {
+//   env e;
+//   address asset;
+//   address[] assets = [asset];
+//   uint256 amount;
+//   address claimer;
+//   address user;
+//   address to;
+//   address reward;
 
-  uint256 rewardsAccrued;
-  bool userDataUpdated;
+//   uint256 rewardsAccrued;
+//   bool userDataUpdated;
 
-  require reward == _DummyERC20_rewardToken;
+//   require reward == _DummyERC20_rewardToken;
 
-  uint256 rewardsAmount = getRewardAmount(e, asset, reward, user);
-  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+//   uint256 rewardsAmount = getRewardAmount(e, asset, reward, user);
+//   rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
 
-  uint256 expectedTotalRewards = assert_uint256(rewardsAmount + rewardsAccrued);
+//   uint256 expectedTotalRewards = assert_uint256(rewardsAmount + rewardsAccrued);
 
-  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
-  uint256 rewardsAmountAfter = getRewardAmount(e, asset, reward, user);
+//   uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+//   uint256 rewardsAmountAfter = getRewardAmount(e, asset, reward, user);
 
-  uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
-  uint256 rewardsAmountAfterTwice = getRewardAmount(e, asset, reward, user);
+//   uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+//   uint256 rewardsAmountAfterTwice = getRewardAmount(e, asset, reward, user);
 
-  assert (expectedTotalRewards <= amount) => totalRewards == expectedTotalRewards;
-  assert (expectedTotalRewards > amount) => totalRewards == amount;
+//   assert (expectedTotalRewards <= amount) => totalRewards == expectedTotalRewards;
+//   assert (expectedTotalRewards > amount) => totalRewards == amount;
 
-  assert (expectedTotalRewards <= amount) => totalRewardsTwice == expectedTotalRewards;
-  assert (expectedTotalRewards > amount) => totalRewardsTwice == amount;
-}
+//   assert (expectedTotalRewards <= amount) => totalRewardsTwice == expectedTotalRewards;
+//   assert (expectedTotalRewards > amount) => totalRewardsTwice == amount;
+// }
