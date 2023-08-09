@@ -1589,3 +1589,453 @@ rule integrity_of_getUserAccruedRewards() {
   uint256 totalAccrued = getUserAccruedRewards(user, reward);
   assert true;
 }
+
+/*
+    @Rule 49
+
+    @title:
+      isRewardEnabled is only changed in configureAssets
+    @methods:
+      All methods
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      
+    @status:
+      COMPLETE
+*/
+rule isRewardEnabled_is_only_set_to_true_in_configureAssets() {
+  env e;
+  method f;
+  calldataarg args;
+
+  address reward;
+
+  f(e, args);
+
+  bool isRewardEnabledAfter = isRewardEnabled(e, reward);
+
+  assert f.selector == sig:configureAssets(RewardsDataTypes.RewardsConfigInput[]).selector => isRewardEnabledAfter;
+  assert f.selector != sig:configureAssets(RewardsDataTypes.RewardsConfigInput[]).selector => !isRewardEnabledAfter;
+}
+
+
+/*
+    @Rule 50
+
+    @title:
+      claimAllRewardsInternal increases to reward balance
+    @methods:
+      claimAllRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/eda664fe23714a7d803d4a89fb565b56/?anonymousKey=26519aed5508ddbe61f234c7408fdda4b20ebe4b
+    @status:
+      COMPLETE
+*/
+rule claimAllRewardsInternal_increases_to_reward_balance_twice_twice() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  address claimer;
+  address user;
+  address to;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  address reward = getRewardsList(e,0);
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 amount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
+  claimAllRewardsInternal(e, assets, claimer, user, to);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
+
+  claimAllRewardsInternal(e, assets, claimer, user, to);
+  uint256 balanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, to);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore + amount + rewardsAccrued));
+  assert to != _TransferStrategy => (balanceAfterTwice == assert_uint256(balanceBefore + amount + rewardsAccrued));
+}
+
+/*
+    @Rule 51
+
+    @title:
+      claimAllRewardsInternal increases to reward balance
+    @methods:
+      claimAllRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/17f05da4b96040068a9f864a9b2e8082/?anonymousKey=062f1a2b8faa649cfc38e959690fb2929f319212
+    @status:
+      COMPLETE
+*/
+rule claimAllRewardsInternal_decreases_transferStrategy_reward_balance_twice_twice() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  address claimer;
+  address user;
+  address to;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  address reward = getRewardsList(e,0);
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 amount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+  claimAllRewardsInternal(e, assets, claimer, user, to);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+
+  claimAllRewardsInternal(e, assets, claimer, user, to);
+  uint256 balanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore - amount - rewardsAccrued));
+  assert to != _TransferStrategy => (balanceAfterTwice == assert_uint256(balanceBefore - amount - rewardsAccrued));
+}
+
+/*
+    @Rule 52
+
+    @title:
+      claimAllRewardsInternal increases to reward balance
+    @methods:
+      claimAllRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/783251ea2dc54818afdc5c76db41f058/?anonymousKey=9d6c8e7745d51b2d71dad3e394de8645d61e9e97
+    @status:
+      COMPLETE
+*/
+rule claimAllRewardsInternal_returns_correct_rewardsList_and_claimedAmounts_twice() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  address claimer;
+  address user;
+  address to;
+  address[] rewardsList;
+  uint256[] claimedAmounts;
+
+  address[] rewardsListTwice;
+  uint256[] claimedAmountsTwice;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  address reward = getRewardsList(e,0);
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 amount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+
+  uint256 totalAmount = assert_uint256(amount + rewardsAccrued);
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+  rewardsList, claimedAmounts = claimAllRewardsInternal(e, assets, claimer, user, to);
+
+  address rewardTokenAddress = _DummyERC20_rewardToken.myAddress(e);
+
+  address[] expectedRewardsList = [rewardTokenAddress];  
+  uint256[] expectedClaimedAmounts = [totalAmount];
+
+  rewardsListTwice, claimedAmountsTwice = claimAllRewardsInternal(e, assets, claimer, user, to);
+
+  assert rewardsListTwice.length == expectedRewardsList.length;
+  assert rewardsListTwice[0] == expectedRewardsList[0];
+  assert claimedAmountsTwice.length == expectedClaimedAmounts.length;
+  assert claimedAmountsTwice[0] == expectedClaimedAmounts[0];
+}
+
+/*
+    @Rule 53
+
+    @title:
+      claimAllRewardsInternal increases to reward balance
+    @methods:
+      claimAllRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/c19e531db4914fa694b47ea63cf4c386/?anonymousKey=87a7083af329da0fad4baafd230b7612d1c51758
+    @status:
+      COMPLETE
+*/
+rule claimAllRewardsInternal_updates_accrued_amount_twice() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  address claimer;
+  address user;
+  address to;
+
+  address reward = getRewardsList(e,0);
+  require reward == _DummyERC20_rewardToken;
+
+  claimAllRewardsInternal(e, assets, claimer, user, to);
+  uint256 amountAfter = getRewardAmount(e, asset, reward, user);
+
+  claimAllRewardsInternal(e, assets, claimer, user, to);
+  uint256 amountAfterTwice = getRewardAmount(e, asset, reward, user);
+
+  assert amountAfter == 0;
+  assert amountAfterTwice == 0;
+}
+
+/*
+    @Rule 54
+
+    @title:
+      claimRewardsInternal returns zero if amount is zero and keeps balances the same
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/a982f2f8d13641ae8405cf450a1427fa/?anonymousKey=ea21d474954ee3089cd1f3b7c075694b8c3b13a4
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_returns_zero_if_amount_zero_twice() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 toRewardBalanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
+  uint256 transferStrategyRewardBalanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+
+  uint256 toRewardBalanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
+  uint256 transferStrategyRewardBalanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy); 
+
+  uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+
+  uint256 toRewardBalanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, to);
+  uint256 transferStrategyRewardBalanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy); 
+
+  assert amount == 0 => (totalRewards == 0 && toRewardBalanceAfter == toRewardBalanceBefore && transferStrategyRewardBalanceAfter == transferStrategyRewardBalanceBefore);
+  assert amount == 0 => (totalRewards == 0 && toRewardBalanceAfter == toRewardBalanceBefore && transferStrategyRewardBalanceAfter == transferStrategyRewardBalanceBefore);
+
+  assert amount == 0 => (totalRewards == 0 && toRewardBalanceAfterTwice == toRewardBalanceBefore && transferStrategyRewardBalanceAfter == transferStrategyRewardBalanceBefore);
+  assert amount == 0 => (totalRewards == 0 && toRewardBalanceAfterTwice == toRewardBalanceBefore && transferStrategyRewardBalanceAfter == transferStrategyRewardBalanceBefore);
+}
+
+/*
+    @Rule 55
+
+    @title:
+      claimRewardsInternal updates accrued amount
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/2adde0113d54415bba47dea8850ff171/?anonymousKey=8bd0ac86bc9c44b2dd7a7c425cb93aa6ae49cef5
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_updates_accrued_amount_twice() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 rewardsAmount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+
+  uint256 expectedTotalRewards = assert_uint256(rewardsAmount + rewardsAccrued);
+
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 rewardsAmountAfter = getRewardAmount(e, asset, reward, user);
+
+  uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 rewardsAmountAfterTwice = getRewardAmount(e, asset, reward, user);
+
+  assert expectedTotalRewards <= amount => rewardsAmountAfterTwice == 0;
+  assert expectedTotalRewards > amount => rewardsAmountAfterTwice == assert_uint256(expectedTotalRewards - amount);
+}
+
+/*
+    @Rule 56
+
+    @title:
+      claimRewardsInternal increases to reward balance
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/57b54d81041d498ba9036d1e847aa7ec/?anonymousKey=842447fddfd6932367f429fe4f3f1f59001129b5
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_increases_to_reward_balance_twice() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, to);
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, to);
+
+  uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 balanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, to);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore + totalRewards));
+  assert to != _TransferStrategy => (balanceAfterTwice == assert_uint256(balanceBefore + totalRewards));
+}
+
+/*
+    @Rule 57
+
+    @title:
+      claimRewardsInternal decreases Transfer Strategy reward balance
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/7700a468230c4c22b595f3cbe15b4b3b/?anonymousKey=d0a90e80ab5af3814281af7abff27c2ca1a0ebf8
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_decreases_transfer_strategy_reward_balance_twice() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 balanceBefore = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 balanceAfter = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+
+  uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 balanceAfterTwice = _DummyERC20_rewardToken.balanceOf(e, _TransferStrategy);
+
+  assert to != _TransferStrategy => (balanceAfter == assert_uint256(balanceBefore - totalRewards));
+  assert to != _TransferStrategy => (balanceAfterTwice == assert_uint256(balanceBefore - totalRewards));
+}
+
+/*
+    @Rule 58
+
+    @title:
+      claimRewardsInternal returns correct totalRewards
+    @methods:
+      claimRewardsInternal
+    @sanity:
+      PASSES
+    @outcome:
+      PASSES
+    @note:
+    @link:
+      https://prover.certora.com/output/3960/4cb9720d504442bdb3a628303b71efb3/?anonymousKey=3e940d822ffcd208e0fcba483ab1a20d2f7a5686
+    @status:
+      COMPLETE
+*/
+rule claimRewardsInternal_returns_correct_totalRewards_twice() {
+  env e;
+  address asset;
+  address[] assets = [asset];
+  uint256 amount;
+  address claimer;
+  address user;
+  address to;
+  address reward;
+
+  uint256 rewardsAccrued;
+  bool userDataUpdated;
+
+  require reward == _DummyERC20_rewardToken;
+
+  uint256 rewardsAmount = getRewardAmount(e, asset, reward, user);
+  rewardsAccrued, userDataUpdated = updateUserData(e, assets, reward, user, 0);
+
+  uint256 expectedTotalRewards = assert_uint256(rewardsAmount + rewardsAccrued);
+
+  uint256 totalRewards = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 rewardsAmountAfter = getRewardAmount(e, asset, reward, user);
+
+  uint256 totalRewardsTwice = claimRewardsInternal(e, assets, amount, claimer, user, to, reward);
+  uint256 rewardsAmountAfterTwice = getRewardAmount(e, asset, reward, user);
+
+  assert (expectedTotalRewards <= amount) => totalRewards == expectedTotalRewards;
+  assert (expectedTotalRewards > amount) => totalRewards == amount;
+
+  assert (expectedTotalRewards <= amount) => totalRewardsTwice == expectedTotalRewards;
+  assert (expectedTotalRewards > amount) => totalRewardsTwice == amount;
+}

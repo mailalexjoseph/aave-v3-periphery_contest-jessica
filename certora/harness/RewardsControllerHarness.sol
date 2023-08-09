@@ -185,4 +185,12 @@ contract RewardsControllerHarness is RewardsController {
   function getUserAssetIndexHarness(address user, address asset, address reward) public view returns (uint256) {
     return _assets[asset].rewards[reward].usersData[user].index;
   }
+
+  function configureAssetsInternal(RewardsDataTypes.RewardsConfigInput[] memory rewardsInput) public {
+    _configureAssets(rewardsInput);
+  }
+
+  function isRewardEnabled(address reward) public view returns (bool) {
+    return _isRewardEnabled[reward];
+  }
 }
