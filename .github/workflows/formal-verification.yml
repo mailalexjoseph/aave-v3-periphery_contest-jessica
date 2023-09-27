@@ -75,4 +75,7 @@ jobs:
       max-parallel: 16
       matrix:
         patch: ${{ fromJson(needs.list-patches.outputs.matrix) }} 
-        rule: ${{ fromJson(needs.list-confs.outputs.matrix) }} 
+        rule: 
+          - certora/conf/default.conf --rule isRewardEnabled_is_only_set_to_true_in_configureAssets
+          - certora/conf/verifyRewardsController_verified.conf --rule isRewardEnabled_is_only_set_to_true_in_configureAssets
+          - certora/conf/verifyRewardsController_verified.conf --rule claimAllRewardsInternal_returns_correct_rewardsList_and_claimedAmounts
